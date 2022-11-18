@@ -1,0 +1,311 @@
+---
+title: "Class 10"
+author: "Jennifer Swindlehurst Chan"
+format: pdf
+editor: visual
+toc: TRUE
+date: 2022-10-28
+---
+
+## Background
+
+# Part 1
+In this mini-project we will examine 538 Halloween Candy data. What is your favorite candy? What is nougat anyway? And how do you say it in American?
+
+
+First step is to read the data...
+
+```{r}
+candy <- read.csv("candy-data.csv", row.names=1)
+head(candy)
+```
+## Q1:
+There are 85 different candy types in this data set.
+
+```{r}
+dim(candy)
+nrow(candy)
+```
+
+## Q2:
+There are 38 candies categorized as "fruity".
+
+```{r}
+sum(candy$fruity)
+table(candy$fruity)
+```
+
+# Part 2
+
+## Q3:
+My favorite candy is Sour Patch Kids and its win percent is 59.864%.
+
+```{r}
+candy["Sour Patch Kids",]$winpercent
+```
+## Q4:
+The win percent value for Kit Kat is 76.7686%.
+
+```{r}
+candy["Kit Kat",]$winpercent
+```
+
+## Q5:
+The win percent for Tootsie Roll Snack Bars is 49.6535%.
+
+```{r}
+candy["Tootsie Roll Snack Bars",]$winpercent
+```
+
+```{r}
+skimr::skim(candy)
+```
+
+## Q6:
+The win percent variable looks to be on a different scale to the majority of the others in the dataset
+
+## Q7:
+For candy$chocolate, the 0 and 1 means that it either is or is not a chocolate candy. 0 means it isn't, 1 means it is.
+
+## Q8:
+
+```{r}
+hist(candy$winpercent)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(candy, aes(winpercent,)) +
+  geom_histogram(bins=10, col="black", fill="orange")
+```
+
+
+## Q9:
+The distribution is not totally symmestrical.
+
+## Q10:
+The center of the distribution is below 50%
+
+## Q11:
+Chocolate candy does rank better than fruity candy on average. 
+
+```{r}
+as.logical(candy$chocolate)
+```
+
+```{r}
+choc_stats <- candy$winpercent[as.logical(candy$chocolate)]
+choc_win <- mean(candy$winpercent[as.logical(candy$chocolate)])
+choc_win
+
+fruit_stats <- candy$winpercent[as.logical(candy$fruity)]
+fruit_win <- mean(candy$winpercent[as.logical(candy$fruity)])
+fruit_win
+```
+
+```{r}
+choc_win > fruit_win
+fruit_win > choc_win
+```
+
+
+## Q12:
+Yes, it is statistically different, the p value is lower than 0.5.
+
+```{r}
+t.test(choc_stats, fruit_stats)
+```
+
+# Part 3
+
+The base R `sort()` and `order()` functions are very useful!
+
+## Q13:
+The least 5 liked candies are: Nik L Nip, Boston Baked Beans, Chiclets, Super Bubble, and Jawbusters.
+
+```{r}
+head(sort(candy$winpercent), n=5)
+```
+
+
+```{r}
+head(candy[order(candy$winpercent),], n=5)
+```
+
+
+```{r}
+library(dplyr)
+
+candy %>%
+  arrange(winpercent) %>%
+  head(5)
+```
+
+## Q14:
+The most liked candies are Reese's Peanut Butter Cup, Reese's Miniatures, Twix, Kit Kat, Snickers.
+
+```{r}
+tail(candy[order(candy$winpercent),], n=5)
+```
+
+
+```{r}
+candy %>%
+  arrange(winpercent) %>%
+  tail(5)
+```
+
+## Q15:
+
+```{r}
+library(ggplot2)
+
+ggplot(candy, aes(winpercent, rownames(candy))) +
+  geom_col() +
+  theme(text = element_text(size=5))
+```
+## Q16:
+
+```{r}
+ggplot(candy) + aes(winpercent, reorder(rownames(candy), winpercent)) +
+  geom_col() +
+  theme(text = element_text(size=5))
+```
+
+```{r}
+my_cols=rep("black", nrow(candy))
+my_cols[as.logical(candy$chocolate)] = "chocolate"
+my_cols[as.logical(candy$bar)] = "brown"
+my_cols[as.logical(candy$fruity)] = "pink"
+```
+
+```{r}
+ggplot(candy) + 
+  aes(winpercent, reorder(rownames(candy),winpercent)) +
+  geom_col(fill=my_cols) +
+  theme(text = element_text(size=5))
+```
+```{r}
+ggsave("mybarplot.png")
+```
+
+## Q17:
+The worst ranked chocolate candy is Sixlets. 
+
+## Q18:
+The best ranked fruity candy is Starburst.
+
+# Part 4
+
+```{r}
+library(ggrepel)
+
+ggplot(candy) +
+  aes(winpercent, pricepercent, label=rownames(candy)) +
+  geom_point(col=my_cols) + 
+  geom_text_repel(col=my_cols, size=2, max.overlaps = 100)
+```
+
+## Q19:
+Reese's Miniatures has a high win percent ranking but is pretty low price percentage.
+
+## Q20:
+The 5 most expensive candy types are Hershey's Special Dark, Mr Goof Bar, Ring pop, Nik L Nip, and Nestle Smarties. Nik L Nip is the lowest ranked at the highest price.
+
+```{r}
+most_money <- candy %>%
+  arrange(pricepercent) %>%
+  tail(5)
+
+most_money
+#candy[order$winpercent,]
+```
+
+```{r}
+most_money[order(most_money$winpercent),]
+```
+
+```{r}
+ord <- order(candy$pricepercent, decreasing = TRUE)
+head( candy[ord,c(11,12)], n=5 )
+```
+
+## Q21:
+
+```{r}
+ggplot(candy) +
+  aes(pricepercent, reorder(rownames(candy), pricepercent)) +
+  geom_segment(aes(yend = reorder(rownames(candy), pricepercent), 
+                   xend = 0), col="gray40") +
+    geom_point()
+```
+
+# Part 5
+
+```{r}
+library(corrplot)
+```
+
+```{r}
+cij <- cor(candy)
+corrplot(cij)
+```
+
+## Q22:
+Fruity and chocolate are anti-correlated.
+
+## Q23:
+Chocolate with win percent and bar are most positively correlated. 
+
+# Part 6
+
+```{r}
+pca <- prcomp(candy, scale=T)
+summary(pca)
+```
+
+```{r}
+plot(pca$x[,1:2], col=my_cols, pch=16)
+```
+
+```{r}
+my_data <- cbind(candy, pca$x[,1:3])
+```
+
+```{r}
+p <- ggplot(my_data) + 
+      aes(x=PC1, y=PC2, 
+        size=winpercent/100,  
+        text=rownames(my_data),
+        label=rownames(my_data)) +
+      geom_point(col=my_cols)
+
+p
+```
+
+```{r}
+library(ggrepel)
+
+p + geom_text_repel(size=3.3, col=my_cols, max.overlaps = 100)  + 
+  theme(legend.position = "none") +
+  labs(title="Halloween Candy PCA Space",
+       subtitle="Colored by type: chocolate bar (dark brown), chocolate other (light brown), fruity (red), other (black)",
+       caption="Data from 538")
+```
+
+```{r}
+library(plotly)
+```
+
+```{r}
+#ggplotly(p)
+```
+
+```{r}
+par(mar=c(8,4,2,2))
+barplot(pca$rotation[,1], las=2, ylab="PC1 Contribution")
+```
+
+## Q24:
+Fruity, hard, and pluribus are picked up strongly by PC1 in the positive direction. This makes sense because fruity candies are usually hard and pluribus, these variables are positively correlated in the correlation plot. Also considering that fruity and chocolate were very negatively correlated in the correlation plot (and fruity is high here, while chocolate is low). Additionally, chocolate was a bit negatively correlated with hard and pluribus (in the correlation plot). 
