@@ -1,2 +1,3 @@
 # BGGN213
-Bioinformatics class rulez
+
+My classwork for Bioinformatics class at UCSD.
