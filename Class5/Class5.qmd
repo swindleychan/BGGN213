@@ -1,0 +1,225 @@
+---
+title: "Class 5: Data visualization with ggplot"
+author: "Jennifer Swindlehurst Chan"
+format: pdf
+editor: visual
+toc: TRUE
+---
+
+# Our first plot
+
+## Cars
+
+R has base graphics
+
+```{r}
+head(cars)
+```
+
+How would I plot this with `ggplot2`?
+
+We need to install and download the ggplot2 package first.
+To install any package in R we use the `install.packages()` function.
+
+```{r}
+# install.packages("ggplot2")
+```
+
+Before I can use this package I need to load it with a `library()` call.
+
+```{r}
+library(ggplot2)
+ggplot(cars)
+```
+
+Every ggplot needs at least three layers:
+
+- **Data** (i.e. the data.frame we have)
+- **Aes** (the aesthetic mapping of our data to what we want to plot)
+- **Geoms** (how we want to plot this stuff!)
+
+
+```{r}
+ggplot(data=cars) +
+  aes(x=speed, y=dist) +
+  geom_point()
+```
+
+```{r}
+ggplot(data=cars) +
+  aes(x=speed, y=dist) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE)
+```
+
+## Gene expression changes
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+
+Q1. How many genes are in this data set
+
+```{r}
+nrow(genes)
+```
+
+There are `r nrow(genes)` genes in this data set.
+
+```{r}
+ggplot(data=genes) +
+  aes(x=Condition1, y=Condition2, col=State) +
+  geom_point() +
+  scale_color_manual(values=c("cyan", "yellow", "magenta")) +
+  ggtitle("Gene Expression Changes Upon Drug Treatment") +
+  xlab("Control (no drug)") +
+  ylab("Drug treatment")
+```
+```{r}
+ggplot(data=genes) +
+  aes(x=Condition1, y=Condition2, col=State) +
+  geom_point(alpha=0.3) +
+  scale_color_manual(values=c("cyan", "yellow", "magenta")) +
+  labs(title = "Gene Expression Changes Upon Drug Treatment", x = "Control (no drug)", y = "Drug treatment")
+```
+
+```{r}
+?ggplot
+```
+
+## Countries
+
+```{r}
+#install.packages("gapminder")
+library(gapminder)
+```
+
+```{r}
+url <- "https://raw.githubusercontent.com/jennybc/gapminder/master/inst/extdata/gapminder.tsv"
+
+gapminder <- read.delim(url)
+```
+
+```{r}
+#install.packages("dplyr") 
+library(dplyr)
+
+gapminder_2007 <- gapminder %>% filter(year==2007)
+```
+
+```{r}
+
+head(gapminder_2007)
+
+```
+
+```{r}
+ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp, color=continent, size=pop) +
+  geom_point(alpha=0.5)
+```
+
+```{r}
+ggplot(gapminder_2007) +
+  geom_point(aes(x=gdpPercap, y=lifeExp, size=pop, color=continent), alpha=0.5) +
+  scale_size_area(max_size = 10)+
+  facet_wrap(2007)+
+  labs(title="GDP per capita vs Life Expectancy", x="GDP per capita", y="Life Expectancy")
+```
+
+
+```{r}
+gapminder_top5 <- gapminder %>% 
+  filter(year==2007) %>% 
+  arrange(desc(pop)) %>% 
+  top_n(5, pop)
+
+gapminder_top5
+```
+
+
+```{r}
+ggplot(gapminder_top5) + 
+  aes(x = reorder(country, -gdpPercap), y = pop, fill = lifeExp)+
+  geom_col()
+```
+
+
+## US arrests
+
+```{r}
+head(USArrests)
+```
+
+```{r}
+USArrests$State <- rownames(USArrests)
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_col() 
+```
+
+
+```{r}
+USArrests$State <- rownames(USArrests)
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_col() +
+  coord_flip()
+```
+
+```{r}
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_point(color = "gold") +
+  geom_segment(aes(x=State, 
+                   xend=State, 
+                   y=0, 
+                   yend=Murder), color="pink") +
+  coord_flip()
+
+```
+
+```{r}
+#install.packages("gifski")
+#install.packages("gganimate")
+
+library(gapminder)
+library(gganimate)
+```
+
+```{r}
+#ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  #geom_point(alpha = 0.7, show.legend = FALSE) +
+  #scale_colour_manual(values = country_colors) +
+  #scale_size(range = c(2, 12)) +
+  #scale_x_log10() +
+  #facet_wrap(~continent) +
+  #labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  #transition_time(year) +
+  #shadow_wake(wake_length = 0.1, alpha = FALSE)
+```
+
+```{r}
+#install.packages("patchwork")
+
+library(patchwork)
+
+p1 <- ggplot(mtcars) + geom_point(aes(mpg, disp))
+p2 <- ggplot(mtcars) + geom_boxplot(aes(gear, disp, group = gear))
+p3 <- ggplot(mtcars) + geom_smooth(aes(disp, qsec))
+p4 <- ggplot(mtcars) + geom_bar(aes(carb))
+
+(p1 | p2 | p3) /
+      p4
+```
+
+```{r}
+ggplot(mtcars) + aes(x=mpg, y=disp) + geom_point()
+```
+
+```{r}
+ggplot(mtcars, aes(mpg, disp)) + geom_point()
+```
+
