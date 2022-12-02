@@ -1,7 +1,7 @@
 ---
 title: "Class 10"
 author: "Jennifer Swindlehurst Chan"
-format: pdf
+format: gfm
 editor: visual
 toc: TRUE
 date: 2022-10-28
